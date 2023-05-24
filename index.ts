@@ -8,6 +8,8 @@ interface _Node {
 }
 
 async function run() {
+  const startTime = Date.now();
+  
   const browser = await puppeteer.launch({ headless: "new" });
   const page = await browser.newPage();
 
@@ -23,11 +25,11 @@ async function run() {
   const queue: _Node[] = [];
 
   const GOTO_LIMIT = 30000;
-  const DELAY = 50;
+  const DELAY = 30;
 
   async function goTo(node: _Node, counter: number): Promise<void> {
+
     await page.goto(node.link);
-    visited.push(node.link);
     
     const links: string[] = await page.$$eval("#mw-content-text a", (as: HTMLAnchorElement[], visited) => as.reduce((arr, curr) => {
       if (curr.href.includes("https://en.wikipedia.org/wiki/") && !curr.href.includes("/File:")) {
@@ -62,6 +64,7 @@ async function run() {
         link,
         children: []
       });
+      visited.push(link);
       queue.push(node.children[node.children.length - 1]);
     }
 
@@ -75,6 +78,8 @@ async function run() {
   }
 
   await goTo(root, 0);
+
+  console.log("Time taken: " + (Date.now() - startTime) / 1000 + " s");
   
   browser.close();
 }
